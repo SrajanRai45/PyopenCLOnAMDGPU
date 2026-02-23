@@ -1,0 +1,23 @@
+[project]
+name = "pyopenclonamdgpu"
+version = "0.1.0"
+description = "High-performance data processing using PyOpenCL and NumPy"
+# uv warned you about this: 
+requires-python = ">=3.11" 
+dependencies = [
+    "numpy>=1.24.0",
+    "pyopencl>=2023.1",
+    "fastapi>=0.115.0",
+    "uvicorn[standard]>=0.30.0",
+    "pydantic>=2.0.0",
+    "pydantic-settings>=2.0.0",
+    "matplotlib>=3.7.0",
+]
+
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+# ADD THIS PART:
+[tool.setuptools.packages.find]
+where = ["src"]
