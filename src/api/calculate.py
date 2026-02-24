@@ -12,7 +12,7 @@ async def calculateArray(request: Request, info: InfoAcceptor = Body(...)):
 
     gpu_service = request.app.state.gpu_service
 
-    numpy_time = computeNP(arr1, arr2, info.operation.value)
+    numpy_result , numpy_time = computeNP(arr1, arr2, info.operation.value)
     opencl_results, opencl_time = gpu_service.calculate(arr1, arr2, info.operation.value)
 
     return {
