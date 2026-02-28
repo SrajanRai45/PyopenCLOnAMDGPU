@@ -54,6 +54,7 @@ Think about my background in game development. In rendering, we have something c
 ![Alt text for the image](assets/diagram1.png)
 
 The exact same concept applies to OpenCL compute. A naive script constantly initializes the GPU context, compiles the C-kernel from scratch, pushes a tiny array over the PCIe bus, waits for the compute, and pulls it back. The physical latency of moving the data and rebuilding the environment takes longer than the actual floating-point math. NumPy wins on small datasets because the data never has to leave the system RAM. To beat NumPy, I didn't just need to use the GPU—I needed to eliminate the setup overhead and keep the GPU fed.
+![Alt text for the image](assets/jupyternotebook performance.png)
 
 ### ⏳ The Interruption (and the Pivot)
 Right in the middle of wrestling with these memory bottlenecks, university exams hit. I had to shelve the OpenCL experiments to focus on a massive 5-day intensive study plan, specifically grinding through Theory of Computation and Machine Learning.
