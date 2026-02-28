@@ -69,27 +69,33 @@ What if I built an API where the GPU context was initialized exactly once? If I 
 
 
 ### ⚙️ Optimized GPU Compute Architecture (Final Design)
+
 When moving from a raw Jupyter notebook to a production-ready application, the biggest bottleneck isn't usually the math—it is state management and data validation. If the CPU wastes time improperly formatting data or repeatedly rebuilding the GPU environment, the parallel processing gains vanish completely.
 
 To solve this, I wrapped the OpenCL logic inside a FastAPI backend, breaking the pipeline into four distinct, highly optimized layers.
 
-1. The Pydantic Gatekeeper (arrayInfo.py)
+#### 1. The Pydantic Gatekeeper (`arrayInfo.py`)
+
 You can't just blindly feed data into a GPU. If the array size is too small, the CPU overhead of transferring the data ruins the efficiency. If it's too large, you risk exceeding the RX 6500M's 4GB VRAM, causing an out-of-memory crash.
 
 To prevent this, I used Pydantic models to enforce strict constraints before the request ever touches the compute logic.
 
-Python
+```python
 class InfoAcceptor(BaseModel):
     arraySize : int = Field(ge = 1000 , le = 100_000_000)
     operation : Operation
-By setting ge=1000 and le=100_000_000, the API guarantees that the GPU is only invoked for workloads where it actually provides a benefit, while keeping the memory footprint safely within the hardware limits.
 
-2. Pre-Compiling the C Kernels (pyopenclcompute.py)
+```
+
+By setting `ge=1000` and `le=100_000_000`, the API guarantees that the GPU is only invoked for workloads where it actually provides a benefit, while keeping the memory footprint safely within the hardware limits.
+
+#### 2. Pre-Compiling the C Kernels (`pyopenclcompute.py`)
+
 This is where the real performance is unlocked. In OpenCL, math operations are written in C (called "kernels"). Compiling this C code into binary instructions for the GPU at runtime is incredibly slow.
 
-Instead of recompiling every time a calculation is requested, the OpenCLCalculatorService class actively scans the hardware platforms, finds the specific GPU (the RX 6500M), and pre-compiles the kernels during the class initialization:
+Instead of recompiling every time a calculation is requested, the `OpenCLCalculatorService` class actively scans the hardware platforms, finds the specific GPU (the RX 6500M), and pre-compiles the kernels during the class initialization:
 
-Python
+```python
 def __init__(self):
     self.ctx, self.queue = self._get_rx6500m_queue()
     
@@ -99,14 +105,18 @@ def __init__(self):
         'sub': ElementwiseKernel(self.ctx, "float *a, float *b, float *c", "c[i] = a[i] - b[i]", "sub_kernel"),
         'mul': ElementwiseKernel(self.ctx, "float *a, float *b, float *c", "c[i] = a[i] * b[i]", "mul_kernel")
     }
-This ensures the math instructions are already sitting in the GPU's memory, waiting for data. Furthermore, when calculate() is called, the NumPy arrays are strictly formatted as contiguous 32-bit floats (np.ascontiguousarray(arr, dtype=np.float32)) to ensure smooth memory transfer to the device buffers.
 
-3. State Management with FastAPI Lifespan (main.py)
-If we initialized the OpenCLCalculatorService inside the route handler, the API would reconnect to the GPU and recompile the kernels on every single API call. That overhead would completely destroy the OpenCL scaling advantage.
+```
 
-Instead, I used FastAPI's lifespan context manager. This ensures the GPU service is instantiated exactly once when the server boots up, attached globally to the application state, and gracefully destroyed when the server shuts down.
+This ensures the math instructions are already sitting in the GPU's memory, waiting for data. Furthermore, when `calculate()` is called, the NumPy arrays are strictly formatted as contiguous 32-bit floats (`np.ascontiguousarray(arr, dtype=np.float32)`) to ensure smooth memory transfer to the device buffers.
 
-Python
+#### 3. State Management with FastAPI Lifespan (`main.py`)
+
+If we initialized the `OpenCLCalculatorService` inside the route handler, the API would reconnect to the GPU and recompile the kernels on every single API call. That overhead would completely destroy the OpenCL scaling advantage.
+
+Instead, I used FastAPI's `lifespan` context manager. This ensures the GPU service is instantiated exactly once when the server boots up, attached globally to the application state, and gracefully destroyed when the server shuts down.
+
+```python
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Initializes the GPU context and compiles kernels globally
@@ -116,16 +126,18 @@ async def lifespan(app: FastAPI):
     del app.state.gpu_service
 
 app = FastAPI(lifespan=lifespan)
-4. The Execution Pipeline (calculate.py)
-With the foundation built, the actual API endpoint is incredibly lean. When a POST request hits /OpenCLCompute/calculateArray, the pipeline executes in three smooth steps:
 
-Data Generation: It generates two contiguous 32-bit float NumPy arrays based on the requested, validated size.
+```
 
-CPU Compute: It passes the arrays to the numpycompute.py service for a baseline time measurement.
+#### 4. The Execution Pipeline (`calculate.py`)
 
-GPU Compute: It retrieves the pre-warmed gpu_service from the app state, pushes the arrays into the GPU, executes the pre-compiled operation, and pulls the results back.
+With the foundation built, the actual API endpoint is incredibly lean. When a POST request hits `/OpenCLCompute/calculateArray`, the pipeline executes in three smooth steps:
 
-Python
+1. **Data Generation:** It generates two contiguous 32-bit float NumPy arrays based on the requested, validated size.
+2. **CPU Compute:** It passes the arrays to the `numpycompute.py` service for a baseline time measurement.
+3. **GPU Compute:** It retrieves the pre-warmed `gpu_service` from the app state, pushes the arrays into the GPU, executes the pre-compiled operation, and pulls the results back.
+
+```python
 @arrayCalclate.post('/OpenCLCompute/calculateArray')
 async def calculateArray(request: Request, info: InfoAcceptor = Body(...)):
     # 1. Data generation
@@ -143,8 +155,10 @@ async def calculateArray(request: Request, info: InfoAcceptor = Body(...)):
         "numpy_time": float(numpy_time),
         "opencl_time": float(opencl_time) 
     }
+
+```
+
 By isolating the GPU context initialization from the actual request cycle, the overhead drops to nearly zero. The OpenCL execution time reported by the API is now a true reflection of the hardware's math capabilities, completely unburdened by setup latency.
 
-Here is an good diagram for understanding
-
+Here is a good diagram for understanding:
 ![Alt text for the image](assets/pyopenclbasics.png)
