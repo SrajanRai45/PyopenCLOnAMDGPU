@@ -144,3 +144,7 @@ async def calculateArray(request: Request, info: InfoAcceptor = Body(...)):
         "opencl_time": float(opencl_time) 
     }
 By isolating the GPU context initialization from the actual request cycle, the overhead drops to nearly zero. The OpenCL execution time reported by the API is now a true reflection of the hardware's math capabilities, completely unburdened by setup latency.
+
+Here is an good diagram for understanding
+
+![Alt text for the image](assets/pyopenclbasics.png)
