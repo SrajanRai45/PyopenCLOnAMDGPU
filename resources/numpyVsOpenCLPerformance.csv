@@ -1,0 +1,7 @@
+,arraySize,NumpyTime,OpenCLTime,performanceBoost,complexityTrend,RecommendedUseCase
+0,10000,3.19e-05,9.96e-06,3.2,Low Overhead/Small Data,Initial Testing/Debugging
+1,1000000,0.00325,6.08e-05,53.53,OpenCL Scaling,Medium Batches
+2,10000000,0.01767,0.002176,8.12,Initial Large Data,Production/GPU Acceleration
+3,100000000,0.17764,0.012722,13.96,High Efficiency,Massive Data Processing
+4,500000000,0.95421,0.065891,14.48,Linear Growth,Scientific Simulation
+5,1000000000,1.89012,0.130543,14.48,Optimal Parallelism,Machine Learning Training

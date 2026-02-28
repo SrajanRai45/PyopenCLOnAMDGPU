@@ -42,3 +42,24 @@ RDNA 2 architecture
 4GB GDDR6 VRAM
 
 A teraflop (TFLOP) represents one trillion floating-point operations per second. So, in theory, this GPU can crush massive math arrays. However, there is a catch: VRAM. With only 4GB of memory, the VRAM severely limits how much data can be stored and processed on the GPU at one time. Moving data back and forth between the system memory and the GPU is an expensive operation that must be optimized.
+
+
+<h3>🏗️ The Problem with Naive GPU Compute</h3>
+When I first wrote my raw PyOpenCL script, the results were incredibly disappointing. For small arrays, the "super-powerful" GPU was actually slower than standard NumPy.
+
+To understand why, you have to look at the hardware bridge between the CPU and the GPU: the PCIe bus.
+
+Think about my background in game development. In rendering, we have something called a Draw Call. If you tell the GPU to draw 1,000 objects one by one, the CPU has to individually package and send 1,000 separate instructions. The overhead of crossing that bridge destroys your frame rate. The GPU spends 90% of its time idling, waiting for the CPU to hand it the next tiny piece of work. To fix it, you batch the data.
+
+The exact same concept applies to OpenCL compute. A naive script constantly initializes the GPU context, compiles the C-kernel from scratch, pushes a tiny array over the PCIe bus, waits for the compute, and pulls it back. The physical latency of moving the data and rebuilding the environment takes longer than the actual floating-point math. NumPy wins on small datasets because the data never has to leave the system RAM. To beat NumPy, I didn't just need to use the GPU—I needed to eliminate the setup overhead and keep the GPU fed.
+
+### ⏳ The Interruption (and the Pivot)
+Right in the middle of wrestling with these memory bottlenecks, university exams hit. I had to shelve the OpenCL experiments to focus on a massive 5-day intensive study plan, specifically grinding through Theory of Computation and Machine Learning.
+
+Ironically, stepping away from the code was exactly what the project needed.
+
+During my study breaks, I started playing around with FastAPI to get a better grip on backend architecture. As I got comfortable with FastAPI’s asynchronous routing and dependency injection, a lightbulb went off.
+
+My OpenCL script was failing because it was structured like a one-off procedural script. It was recompiling the math kernels and rebuilding the GPU command queue every single time I hit "run."
+
+What if I built an API where the GPU context was initialized exactly once? If I could tie the OpenCL environment to the lifecycle of a web server, the endpoints would simply act as funnels, feeding large batches of data directly into a pre-warmed GPU memory state.
