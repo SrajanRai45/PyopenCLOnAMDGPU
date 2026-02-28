@@ -45,7 +45,7 @@ A teraflop (TFLOP) represents one trillion floating-point operations per second.
 
 
 <h3>🏗️ The Problem with Naive GPU Compute</h3>
-When I first wrote my raw PyOpenCL script, the results were incredibly disappointing. For small arrays, the "super-powerful" GPU was actually slower than standard NumPy.
+When I first wrote my raw PyOpenCL script, the results were slower then expected. For small arrays, the "super-powerful" GPU was actually slower than standard NumPy.
 
 To understand why, you have to look at the hardware bridge between the CPU and the GPU: the PCIe bus.
 
