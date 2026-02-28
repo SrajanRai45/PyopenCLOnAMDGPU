@@ -51,6 +51,8 @@ To understand why, you have to look at the hardware bridge between the CPU and t
 
 Think about my background in game development. In rendering, we have something called a Draw Call. If you tell the GPU to draw 1,000 objects one by one, the CPU has to individually package and send 1,000 separate instructions. The overhead of crossing that bridge destroys your frame rate. The GPU spends 90% of its time idling, waiting for the CPU to hand it the next tiny piece of work. To fix it, you batch the data.
 
+![Alt text for the image](assets/diagram1.png)
+
 The exact same concept applies to OpenCL compute. A naive script constantly initializes the GPU context, compiles the C-kernel from scratch, pushes a tiny array over the PCIe bus, waits for the compute, and pulls it back. The physical latency of moving the data and rebuilding the environment takes longer than the actual floating-point math. NumPy wins on small datasets because the data never has to leave the system RAM. To beat NumPy, I didn't just need to use the GPU—I needed to eliminate the setup overhead and keep the GPU fed.
 
 ### ⏳ The Interruption (and the Pivot)
