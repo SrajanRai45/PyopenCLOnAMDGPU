@@ -162,3 +162,50 @@ By isolating the GPU context initialization from the actual request cycle, the o
 
 Here is a good diagram for understanding:
 ![Alt text for the image](assets/pyopenclbasics.png)
+
+
+
+---
+
+### 📊 The Results: Proof in the Numbers
+
+Architecture is only as good as the metrics it produces. After wiring up the FastAPI endpoints, I ran a series of benchmarks comparing the baseline NumPy CPU execution against the pre-compiled OpenCL GPU pipeline.
+
+Here is how the RX 6500M scaled against the Ryzen 5 5600H:
+
+| Array Size | NumPy Time (s) | OpenCL Time (s) | Performance Boost | Complexity Trend | Recommended Use Case |
+| --- | --- | --- | --- | --- | --- |
+| **10,000** | 0.000031 | 0.000009 | 3.2x | Low Overhead | Initial Testing / Debugging |
+| **1,000,000** | 0.003250 | 0.000060 | **53.53x** | OpenCL Scaling | Medium Batches |
+| **10,000,000** | 0.017670 | 0.002176 | 8.12x | Initial Large Data | Production Acceleration |
+| **100,000,000** | 0.177640 | 0.012722 | 13.96x | High Efficiency | Massive Data Processing |
+| **500,000,000** | 0.954210 | 0.065891 | 14.48x | Linear Growth | Scientific Simulation |
+| **1,000,000,000** | 1.890120 | 0.130543 | **14.48x** | Optimal Parallelism | Machine Learning Training |
+
+![Alt text for the image](assets/Figure_1.png)
+
+**The Sweet Spot:** The most staggering jump happens at the 1,000,000 element mark, where the GPU operates **53 times faster** than the CPU. At this size, the data is large enough to fully utilize the parallel stream processors, but small enough that memory transfer overhead is virtually nonexistent.
+
+**The Ceiling:** As we push toward 1 billion elements, memory bandwidth constraints begin to stabilize the performance boost at a consistent **14.48x multiplier**. At a billion elements, NumPy takes nearly 2 full seconds to compute a simple operation. The "unsupported" RX 6500M chews through the exact same workload in 0.13 seconds.
+
+### 💡 Conclusion: The Universal Key
+
+What started as a frustrating hardware roadblock evolved into a masterclass in system architecture. When standard libraries like TensorFlow and PyTorch locked me out due to a lack of CUDA and ROCm support, it forced me to look under the hood.
+
+Writing the OpenCL C-kernels was only half the battle. The real performance gains came from understanding *how* to feed the GPU efficiently. By wrapping the compute logic inside a FastAPI lifespan and using Pydantic to strictly manage memory payloads, I eliminated the setup latency that normally plagues Python GPU scripts.
+
+OpenCL isn't just a fallback for older or deprecated hardware—it is a deeply powerful, hardware-agnostic tool. If properly architected, it can turn an ordinary laptop into a highly capable compute server.
+
+I am already taking these architectural lessons—specifically the heavy use of FastAPI, SQLAlchemy, and Pydantic—and applying them to an AI-powered task manager I am currently developing. Understanding how to manage application state and optimize bottlenecks at the hardware level changes how you write every piece of backend code moving forward.
+
+Hardware limits are rarely absolute. Sometimes, you just have to write the pipeline yourself.
+
+---
+
+**Author:** Srajan Rai
+
+*B.Tech Computer Science (Data Science)*
+
+
+
+
