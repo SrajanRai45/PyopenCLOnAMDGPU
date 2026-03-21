@@ -25,23 +25,26 @@ class OpenCLCalculatorService:
         fallback_ctx = cl.create_some_context(interactive=False)
         return fallback_ctx, cl.CommandQueue(fallback_ctx, properties=cl.command_queue_properties.PROFILING_ENABLE)
 
-    def calculate(self, arr1: np.ndarray, arr2: np.ndarray, operation: str):
+    def calculate(self, arr1: np.ndarray, arr2: np.ndarray, operation: str,iterations = 100):
         if operation not in self.kernels:
             raise ValueError(f"Unsupported operation: {operation}")
-
+        
         arr1_f32 = np.ascontiguousarray(arr1, dtype=np.float32)
         arr2_f32 = np.ascontiguousarray(arr2, dtype=np.float32)
-
+        
         arr1_g = cl_array.to_device(self.queue, arr1_f32)
         arr2_g = cl_array.to_device(self.queue, arr2_f32)
         c_g = cl_array.empty_like(arr1_g)
-
+        
         kernel_func = self.kernels[operation]
         
-        exec_event = kernel_func(arr1_g, arr2_g, c_g)
-        exec_event.wait()
+        times = []
+        for _ in range(iterations):
+            exec_event = kernel_func(arr1_g, arr2_g, c_g)
+            exec_event.wait()
         
-        elapsed_time = (exec_event.profile.end - exec_event.profile.start) * 1e-9
-        c_cpu = c_g.get()
+            elapsed_time = (exec_event.profile.end - exec_event.profile.start) * 1e-9
+            times.append(elapsed_time)
+        #c_cpu = c_g.get()
 
-        return c_cpu, elapsed_time
+        return times

@@ -11,11 +11,15 @@ async def calculateArray(request: Request, info: InfoAcceptor = Body(...)):
     arr2 = np.random.rand(info.arraySize).astype(np.float32)
 
     gpu_service = request.app.state.gpu_service
-
-    numpy_result , numpy_time = computeNP(arr1, arr2, info.operation.value)
-    opencl_results, opencl_time = gpu_service.calculate(arr1, arr2, info.operation.value)
+    
+    numpy_time = []
+    opencl_time = []
+    for i in range(0,100):
+        numpy_time.append(float(computeNP(arr1, arr2, info.operation.value)))
+    
+    opencl_time = gpu_service.calculate(arr1, arr2, info.operation.value)
 
     return {
-        "numpy_time": float(numpy_time),
-        "opencl_time": float(opencl_time) 
+        "numpy_time": numpy_time,
+        "opencl_time": opencl_time 
     }

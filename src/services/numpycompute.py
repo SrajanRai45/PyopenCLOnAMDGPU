@@ -24,7 +24,7 @@ def computeNP(arr1: List[int], arr2: List[int], operation: str) -> Tuple[np.ndar
     end_time = time.perf_counter()
     elapsed_time = end_time - start_time
 
-    return c, elapsed_time
+    return elapsed_time
 
 # Example usage:
 # result, duration = computeNP([1, 2, 3], [4, 5, 6])
