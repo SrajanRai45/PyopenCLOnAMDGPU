@@ -17,9 +17,10 @@ async def calculateArray(request: Request, info: InfoAcceptor = Body(...)):
     for i in range(0,100):
         numpy_time.append(float(computeNP(arr1, arr2, info.operation.value)))
     
-    opencl_time = gpu_service.calculate(arr1, arr2, info.operation.value)
+    opencl_time , transfer_time = gpu_service.calculate(arr1, arr2, info.operation.value)
 
     return {
         "numpy_time": numpy_time,
-        "opencl_time": opencl_time 
+        "opencl_time": opencl_time,
+        "opencl_transfer_time": transfer_time
     }

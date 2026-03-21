@@ -2,6 +2,7 @@ import pyopencl as cl
 import pyopencl.array as cl_array
 from pyopencl.elementwise import ElementwiseKernel
 import numpy as np
+import time
 
 class OpenCLCalculatorService:
     def __init__(self):
@@ -28,13 +29,17 @@ class OpenCLCalculatorService:
     def calculate(self, arr1: np.ndarray, arr2: np.ndarray, operation: str,iterations = 100):
         if operation not in self.kernels:
             raise ValueError(f"Unsupported operation: {operation}")
-        
+         
         arr1_f32 = np.ascontiguousarray(arr1, dtype=np.float32)
         arr2_f32 = np.ascontiguousarray(arr2, dtype=np.float32)
         
+        t0 = time.perf_counter()
         arr1_g = cl_array.to_device(self.queue, arr1_f32)
         arr2_g = cl_array.to_device(self.queue, arr2_f32)
         c_g = cl_array.empty_like(arr1_g)
+        t1= time.perf_counter()
+
+        transfer_time = t1 - t0
         
         kernel_func = self.kernels[operation]
         
@@ -47,4 +52,4 @@ class OpenCLCalculatorService:
             times.append(elapsed_time)
         #c_cpu = c_g.get()
 
-        return times
+        return times , transfer_time
