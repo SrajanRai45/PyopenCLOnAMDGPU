@@ -7,6 +7,7 @@ class Operation(str , Enum):
     substraction = 'sub'
     #devision = 'dev'
     multiplication = 'mul'
+    polynomial = 'poly'
 
 
 class InfoAcceptor(BaseModel):

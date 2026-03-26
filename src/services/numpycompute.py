@@ -18,6 +18,8 @@ def computeNP(arr1: List[int], arr2: List[int], operation: str) -> Tuple[np.ndar
         c = a - b
     elif operation == 'mul':
         c = a * b
+    elif operation == 'poly':
+        c = (arr1**3 * 2.5) + (arr2**2 * arr1) - (arr2 * 0.5)
     else:
         raise ValueError("Unsupported operation")
 

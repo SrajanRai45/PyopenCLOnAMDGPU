@@ -11,7 +11,8 @@ class OpenCLCalculatorService:
         self.kernels = {
             'add': ElementwiseKernel(self.ctx, "float *a, float *b, float *c", "c[i] = a[i] + b[i]", "add_kernel"),
             'sub': ElementwiseKernel(self.ctx, "float *a, float *b, float *c", "c[i] = a[i] - b[i]", "sub_kernel"),
-            'mul': ElementwiseKernel(self.ctx, "float *a, float *b, float *c", "c[i] = a[i] * b[i]", "mul_kernel")
+            'mul': ElementwiseKernel(self.ctx, "float *a, float *b, float *c", "c[i] = a[i] * b[i]", "mul_kernel"),
+            'poly': ElementwiseKernel(self.ctx,"float *a, float *b, float *c", "c[i] = (a[i]*a[i]*a[i] * 2.5f) + (b[i]*b[i] * a[i]) - (b[i] * 0.5f)", "poly_kernel")
         }
 
     def _get_rx6500m_queue(self):
