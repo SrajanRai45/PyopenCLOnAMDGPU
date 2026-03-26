@@ -44,12 +44,21 @@ class OpenCLCalculatorService:
         kernel_func = self.kernels[operation]
         
         times = []
+       
+        #warmup sessions 10 times 
+        for i in range(0,10):
+            kernel_func(arr1_g,arr2_g,c_g).wait()
+        
         for _ in range(iterations):
             exec_event = kernel_func(arr1_g, arr2_g, c_g)
             exec_event.wait()
         
             elapsed_time = (exec_event.profile.end - exec_event.profile.start) * 1e-9
             times.append(elapsed_time)
-        #c_cpu = c_g.get()
+        t2 = time.perf_counter()
+        c_cpu = c_g.get()
+        t3 = time.perf_counter()
+
+        transfer_time += (t3-t2)
 
         return times , transfer_time

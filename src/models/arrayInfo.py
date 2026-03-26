@@ -10,7 +10,7 @@ class Operation(str , Enum):
 
 
 class InfoAcceptor(BaseModel):
-    arraySize : int = Field(ge = 1000 , le = 100_000_000)
+    arraySize : int = Field(ge = 1000 , le = 250_000_000)
     operation : Operation
 
     model_config = ConfigDict(
