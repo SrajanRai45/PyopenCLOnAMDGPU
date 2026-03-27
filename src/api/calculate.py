@@ -2,6 +2,7 @@ from fastapi import APIRouter, Body, Request
 from src.models.arrayInfo import InfoAcceptor
 from src.services.numpycompute import computeNP
 import numpy as np
+import time
 
 arrayCalclate = APIRouter()
 
@@ -14,13 +15,23 @@ async def calculateArray(request: Request, info: InfoAcceptor = Body(...)):
     
     numpy_time = []
     opencl_time = []
+    numpy_batch_time_start = time.perf_counter()
     for i in range(0,100):
         numpy_time.append(float(computeNP(arr1, arr2, info.operation.value)))
     
+    numpy_batch_time_end = time.perf_counter()
+
+    opencl_batch_time_start = time.perf_counter()
     opencl_time , transfer_time = gpu_service.calculate(arr1, arr2, info.operation.value)
+    opencl_batch_time_end = time.perf_counter()
+
+    numpy_batch_time = numpy_batch_time_end - numpy_batch_time_start
+    opencl_batch_time = opencl_batch_time_end - opencl_batch_time_start
 
     return {
         "numpy_time": numpy_time,
         "opencl_time": opencl_time,
-        "opencl_transfer_time": transfer_time
+        "opencl_transfer_time": transfer_time,
+        "batch_numpy_time": numpy_batch_time,
+        "batch_opencl_time": opencl_batch_time
     }
