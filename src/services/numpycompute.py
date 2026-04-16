@@ -9,9 +9,6 @@ def computeNP(arr1: List[int], arr2: List[int], operation: str) -> Tuple[np.ndar
     """
     start_time = time.perf_counter()
 
-    a = np.array(arr1, dtype=np.float32)
-    b = np.array(arr2, dtype=np.float32)
-
     if operation == 'add':
         c = a + b
     elif operation == 'sub':
