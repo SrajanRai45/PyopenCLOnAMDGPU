@@ -20,7 +20,10 @@ class OpenCLCalculatorService:
             try:
                 for gpu in platform.get_devices(device_type=cl.device_type.GPU):
                     if "6500" in gpu.name:
-                        return cl.Context([gpu]), cl.CommandQueue(gpu, properties=cl.command_queue_properties.PROFILING_ENABLE)
+                        ctx = ctx = cl.Context([gpu])
+                        queue = cl.CommandQueue(ctx, properties=cl.command_queue_properties.PROFILING_ENABLE)
+
+                        return ctx,queue
             except cl.LogicError:
                 continue
                 
